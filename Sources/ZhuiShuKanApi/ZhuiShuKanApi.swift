@@ -40,6 +40,8 @@ public struct ZhuiShuKanApi {
         return try parseSearch(data)
     }
 
+    
+
     // MARK: - Auxiliary
 
     static func getMenu(_ url: URL) async throws -> [Menu] {
