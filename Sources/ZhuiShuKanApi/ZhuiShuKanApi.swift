@@ -40,6 +40,26 @@ public struct ZhuiShuKanApi {
         return try parseSearch(data)
     }
 
+    // MARK: - Auxiliary
+
+    static func getMenu(_ url: URL) async throws -> [Menu] {
+        let (data, response) = try await URLSession.shared.data(from: url)
+
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw NSError()
+        }
+
+        let menuURL = try parseDetail(data)
+
+        let (menuData, menuResponse) = try await URLSession.shared.data(from: menuURL)
+
+        guard (menuResponse as? HTTPURLResponse)?.statusCode == 200 else {
+            throw NSError()
+        }
+
+        return try parseMenu(menuData)
+    }
+
     // MARK: - Soup
 
     static func parseSearch(_ data: Data) throws -> [SearchResult] {
@@ -51,11 +71,40 @@ public struct ZhuiShuKanApi {
 
         return try ul.array().compactMap { li in
             guard let name = try li.select("a").first()?.attr("title") else { return nil }
-            guard let link = try li.select("a").first()?.attr("href"), let url = URL(string: link) else { return nil }
+            guard let link = try li.select("a").first()?.attr("href"), let url = URL(string: "https://m.zhuishukan.com" + link) else { return nil }
             guard let image = try li.select("a").first()?.select("img").first()?.attr("src"), let imageURL = URL(string: image)  else { return nil }
             let author = try li.select("a").array()[2].text()
 
             return SearchResult(name: name, author: author, preview: imageURL, url: url)
+        }
+    }
+
+    static func parseDetail(_ data: Data) throws -> URL {
+        let doc = try createDoc(data)
+
+        guard let body = doc.body() else { throw NSError() }
+
+        let li = try body.getElementsByClass("now")
+
+        guard let link = try li.select("a").first()?.attr("href") else { throw NSError() }
+
+        guard let url = URL(string: "https://m.zhuishukan.com" + link) else { throw NSError() }
+
+        return url
+    }
+
+    static func parseMenu(_ data: Data) throws -> [Menu] {
+        let doc = try createDoc(data)
+
+        guard let body = doc.body() else { throw NSError() }
+
+        let ul = try body.getElementsByClass("read")
+
+        return try ul.select("li").compactMap { li in
+            guard let name = try li.select("a").first()?.text() else { return nil }
+            guard let link = try li.select("a").first()?.attr("href"), let url = URL(string: "https://m.zhuishukan.com" + link) else { return nil }
+
+            return Menu(title: name, url: url)
         }
     }
 
