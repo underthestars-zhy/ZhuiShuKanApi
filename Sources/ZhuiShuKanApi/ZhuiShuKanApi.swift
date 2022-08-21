@@ -41,9 +41,15 @@ public struct ZhuiShuKanApi {
     }
 
     public static func getContent(_ search: SearchResult) async throws -> [Content] {
-        let menu = try await getMenu(search.url)
+        let menus = try await getMenu(search.url)
 
-        return []
+        var contents = [Content]()
+
+        for menu in menus {
+            contents.append(try await parseContent(menu))
+        }
+
+        return contents
     }
 
     // MARK: - Auxiliary
@@ -113,7 +119,12 @@ public struct ZhuiShuKanApi {
         var res = [Menu]()
 
         for url in urls {
-            let (_data, response) = try await URLSession.shared.data(from: url)
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+
+            request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0) Gecko/20100101 Firefox/102.0", forHTTPHeaderField: "User-Agent")
+
+            let (_data, response) = try await URLSession.shared.data(for: request)
 
             guard (response as? HTTPURLResponse)?.statusCode == 200 else {
                 throw NSError()
@@ -138,9 +149,49 @@ public struct ZhuiShuKanApi {
         return res
     }
 
-//    static func parseContent(_ menu: Menu) -> Content {
-//
-//    }
+    static func parseContent(_ menu: Menu) async throws -> Content {
+        func innerParse(_ url: URL, content: String = "") async throws -> String {
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+
+            request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0) Gecko/20100101 Firefox/102.0", forHTTPHeaderField: "User-Agent")
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                throw NSError()
+            }
+
+            let doc = try createDoc(data)
+
+            guard let body = doc.body() else { throw NSError() }
+
+            let div = try body.getElementsByClass("azhuishukan_t62ff29a")
+
+            var subDivs = try div.select("div").array().filter {
+                try $0.className().isEmpty
+            }
+
+            subDivs.removeFirst()
+            let last = try subDivs.removeLast().text()
+
+            let endContent = content + (try subDivs.reduce("") { partialResult, subDiv in
+                return partialResult + (try subDiv.text()) + "\n"
+            })
+
+            let page = try body.getElementsByClass("pager z1")
+
+            let a3 = try page.select("a").array()[2]
+
+            if try a3.text() == "下一页", let _url = URL(string: "https://m.zhuishukan.com" + (try a3.attr("href"))) {
+                return try await innerParse(_url, content: endContent)
+            } else {
+                return endContent + last
+            }
+        }
+
+        return await Content(title: menu.title, content: try innerParse(menu.url))
+    }
 
     static func createDoc(_ data: Data) throws -> Document {
         guard let html = String(data: data, encoding: .utf8) else { throw NSError() }
