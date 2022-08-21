@@ -150,7 +150,7 @@ public struct ZhuiShuKanApi {
     }
 
     static func parseContent(_ menu: Menu) async throws -> Content {
-        func innerParse(_ url: URL, content: String = "") async throws -> String {
+        func innerParse(_ url: URL, content: [String] = []) async throws -> [String] {
             var request = URLRequest(url: url)
             request.httpMethod = "GET"
 
@@ -175,8 +175,8 @@ public struct ZhuiShuKanApi {
             subDivs.removeFirst()
             let last = try subDivs.removeLast().text()
 
-            let endContent = content + (try subDivs.reduce("") { partialResult, subDiv in
-                return partialResult + (try subDiv.text()) + "\n"
+            let endContent = content + (try subDivs.map {
+                try $0.text()
             })
 
             let page = try body.getElementsByClass("pager z1")
@@ -186,7 +186,7 @@ public struct ZhuiShuKanApi {
             if try a3.text() == "下一页", let _url = URL(string: "https://m.zhuishukan.com" + (try a3.attr("href"))) {
                 return try await innerParse(_url, content: endContent)
             } else {
-                return endContent + last
+                return endContent + [last]
             }
         }
 

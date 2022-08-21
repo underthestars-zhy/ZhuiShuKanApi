@@ -14,4 +14,12 @@ final class ZhuiShuKanApiTests: XCTestCase {
         let menu = Menu(title: "第1章 遗产", url: URL(string: "https://m.zhuishukan.com/views/776/id_776304_215097.html")!)
         print(try await ZhuiShuKanApi.parseContent(menu).content)
     }
+
+    func testGenEpub() async throws {
+        let search = SearchResult(name: "原来我是妖二代", author: "卖报小郎君", preview: URL(string: "https://img.zhuishukan.com/files/article/image/224/224729/224729s.jpg")!, url: URL(string: "https://m.zhuishukan.com/book/776/id_776304.html")!)
+
+        let contents = [Content(title: "1", content: ["1", "2"]), Content(title: "2", content: ["1", "2"])]
+
+        try await EpubGen(contents: contents, searchResult: search).gen(URL(filePath: "/Users/zhuhaoyu/Downloads/test"))
+    }
 }

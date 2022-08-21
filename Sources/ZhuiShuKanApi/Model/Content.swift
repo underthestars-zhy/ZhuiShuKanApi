@@ -9,5 +9,9 @@ import Foundation
 
 public struct Content {
     let title: String
-    let content: String
+    let content: [String]
+
+    var string: String {
+        content.reduce("", +)
+    }
 }
