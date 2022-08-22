@@ -40,7 +40,7 @@ public struct ZhuiShuKanApi {
         return try parseSearch(data)
     }
 
-    public static func getContent(_ search: SearchResult, progress: ((Double) -> ())? = nil) async throws -> [Content] {
+    public static func getContent(_ search: SearchResult, temp fileURL: URL? = nil, progress: ((Double) -> ())? = nil) async throws -> [Content] {
         let menus = try await getMenu(search.url) {
             progress?($0 * 0.1)
         }
@@ -48,18 +48,23 @@ public struct ZhuiShuKanApi {
         var contents = [Content]()
 
         for (id, menu) in menus.enumerated() {
-            contents.append(try await parseContent(menu))
-            progress?(Double(id + 1) / Double(menus.count) * 0.9)
+            contents.append(try await parseContent(menu, fileURL: fileURL))
+            progress?(Double(id + 1) / Double(menus.count) * 0.9 + 0.1)
         }
 
         return contents
     }
 
-    public static func genEpub(at filePath: URL, with searchResult: SearchResult, progress: ((Double) -> ())? = nil) async throws {
-        let contents = try await getContent(searchResult) {
+    public static func genEpub(at filePath: URL, with searchResult: SearchResult, temp fileURL: URL? = nil, progress: ((Double) -> ())? = nil) async throws {
+        let contents = try await getContent(searchResult, temp: fileURL) {
             progress?($0 * 0.5)
         }
-        try await EpubGen(contents: contents, searchResult: searchResult).gen(filePath, progress: progress)
+
+        try await EpubGen(contents: contents, searchResult: searchResult).gen(filePath) {
+            progress?(0.5 + $0 * 0.5)
+        }
+
+        progress?(1)
     }
 
     // MARK: - Auxiliary
@@ -161,7 +166,7 @@ public struct ZhuiShuKanApi {
         return res
     }
 
-    static func parseContent(_ menu: Menu) async throws -> Content {
+    static func parseContent(_ menu: Menu, fileURL: URL? = nil) async throws -> Content {
         func innerParse(_ url: URL, content: [String] = []) async throws -> [String] {
             var request = URLRequest(url: url)
             request.httpMethod = "GET"
@@ -202,7 +207,14 @@ public struct ZhuiShuKanApi {
             }
         }
 
-        return await Content(title: menu.title, content: try innerParse(menu.url))
+        if let fileURL {
+            let saveFileURl = fileURL.appending(path: "\(UUID()).json")
+            let contents = try await innerParse(menu.url)
+            try JSONEncoder().encode(contents).write(to: saveFileURl)
+            return Content(title: menu.title, _content: nil, fileURL: saveFileURl)
+        } else {
+            return await Content(title: menu.title, _content: try innerParse(menu.url), fileURL: nil)
+        }
     }
 
     static func createDoc(_ data: Data) throws -> Document {

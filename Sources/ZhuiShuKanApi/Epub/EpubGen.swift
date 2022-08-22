@@ -22,7 +22,7 @@ struct EpubGen {
 
         for (id, content) in contents.enumerated() {
             try genChapter(content, id: id + 1, ops: opsURL)
-            progress?(0.5 + Double(id) / Double(contents.count) * 0.4)
+            progress?(Double(id + 1) / Double(contents.count) * 0.9)
         }
 
         try genNavigation(contents.map(\.title), ops: opsURL)
@@ -37,10 +37,12 @@ struct EpubGen {
         let epubFilePath = filePath.appending(path: "\(searchResult.name).epub")
 
         try Zip.zipFiles(paths: [folderURL.appending(path: "META-INF"), folderURL.appending(path: "mimetype"), opsURL], zipFilePath: zipFilePath, password: nil) {
-            progress?($0 * 0.1)
+            progress?($0 * 0.1 + 0.9)
         }
 
         try FileManager.default.moveItem(at: zipFilePath, to: epubFilePath)
+
+        try FileManager.default.removeItem(at: folderURL)
     }
 
     // MARK: - Gen Chapter
