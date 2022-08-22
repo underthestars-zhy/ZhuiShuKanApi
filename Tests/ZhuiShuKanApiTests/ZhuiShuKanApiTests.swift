@@ -3,7 +3,7 @@ import XCTest
 
 final class ZhuiShuKanApiTests: XCTestCase {
     func testSearch() async throws {
-        print(try await ZhuiShuKanApi.search(name: "原来我是妖二代"))
+        print(try await ZhuiShuKanApi.search(name: "诡秘之主"))
     }
 
     func testGetMenu() async throws {
@@ -11,7 +11,7 @@ final class ZhuiShuKanApiTests: XCTestCase {
     }
 
     func testGetContent() async throws {
-        let menu = Menu(title: "第一章 姐弟", url: URL(string: "https://m.ijjxsw.co/txt/37414/19132645.html")!)
+        let menu = Menu(title: "第一章 姐弟", url: URL(string: "https://m.ijjxsw.co/txt/1909/2013578.html")!)
         print(try await ZhuiShuKanApi.parseContent(menu).content)
     }
 

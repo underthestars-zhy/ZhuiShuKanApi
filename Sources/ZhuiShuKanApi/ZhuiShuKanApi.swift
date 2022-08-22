@@ -192,7 +192,9 @@ public struct ZhuiShuKanApi {
             guard let span = try body.getElementById("Content") else { throw NSError() }
 
             let endContent = content + (try span.select("p").map {
-                try $0.text()
+                return try $0.text().replacing("<content>", with: "").replacing("</content>", with: "")
+            }.filter {
+                $0 != "最快更新" && $0 != ""
             })
 
             guard let next = try body.getElementById("next_url") else { throw NSError() }

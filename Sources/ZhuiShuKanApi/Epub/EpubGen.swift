@@ -42,7 +42,7 @@ struct EpubGen {
 
         try FileManager.default.moveItem(at: zipFilePath, to: epubFilePath)
 
-        try FileManager.default.removeItem(at: folderURL)
+//        try FileManager.default.removeItem(at: folderURL)
     }
 
     // MARK: - Gen Chapter
