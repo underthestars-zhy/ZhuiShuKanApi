@@ -26,10 +26,12 @@ let package = Package(
         .target(
             name: "ZhuiShuKanApi",
             dependencies: [
-                .product(name: "SwiftSoup", package: "SwiftSoup")
-            ]),
+                .product(name: "SwiftSoup", package: "SwiftSoup"),
+            ],
+            path: "Sources"),
         .testTarget(
             name: "ZhuiShuKanApiTests",
-            dependencies: ["ZhuiShuKanApi"]),
+            dependencies: ["ZhuiShuKanApi"],
+            path: "Sources"),
     ]
 )
