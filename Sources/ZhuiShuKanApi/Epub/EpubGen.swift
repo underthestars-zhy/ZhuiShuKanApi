@@ -6,13 +6,14 @@
 //
 
 import Foundation
+import Zip
 
 struct EpubGen {
     let contents: [Content]
     let searchResult: SearchResult
     let uuid = UUID().uuidString
 
-    func gen(_ filePath: URL) async throws {
+    func gen(_ filePath: URL, progress: ((Double) -> ())? = nil) async throws {
         let folderURL = try createFolder(filePath)
 
         try createMETAINF(folderURL)
@@ -21,6 +22,7 @@ struct EpubGen {
 
         for (id, content) in contents.enumerated() {
             try genChapter(content, id: id + 1, ops: opsURL)
+            progress?(0.5 + Double(id) / Double(contents.count) * 0.4)
         }
 
         try genNavigation(contents.map(\.title), ops: opsURL)
@@ -30,6 +32,15 @@ struct EpubGen {
         try genToc(contents.map(\.title), ops: opsURL)
 
         try await genCover(ops: opsURL)
+
+        let zipFilePath = filePath.appending(path: "\(searchResult.name).zip")
+        let epubFilePath = filePath.appending(path: "\(searchResult.name).epub")
+
+        try Zip.zipFiles(paths: [folderURL.appending(path: "META-INF"), folderURL.appending(path: "mimetype"), opsURL], zipFilePath: zipFilePath, password: nil) {
+            progress?($0 * 0.1)
+        }
+
+        try FileManager.default.moveItem(at: zipFilePath, to: epubFilePath)
     }
 
     // MARK: - Gen Chapter

@@ -20,6 +20,16 @@ final class ZhuiShuKanApiTests: XCTestCase {
 
         let contents = [Content(title: "1", content: ["1", "2"]), Content(title: "2", content: ["1", "2"])]
 
-        try await EpubGen(contents: contents, searchResult: search).gen(URL(filePath: "/Users/zhuhaoyu/Downloads/test"))
+        try await EpubGen(contents: contents, searchResult: search).gen(URL(filePath: "/Users/zhuhaoyu/Downloads/test")) {
+            print($0)
+        }
+    }
+
+    func testFinal() async throws {
+        let search = SearchResult(name: "原来我是妖二代", author: "卖报小郎君", preview: URL(string: "https://img.zhuishukan.com/files/article/image/224/224729/224729s.jpg")!, url: URL(string: "https://m.zhuishukan.com/book/776/id_776304.html")!)
+
+        try await ZhuiShuKanApi.genEpub(at: URL(filePath: "/Users/zhuhaoyu/Downloads/test"), with: search) {
+            print($0)
+        }
     }
 }

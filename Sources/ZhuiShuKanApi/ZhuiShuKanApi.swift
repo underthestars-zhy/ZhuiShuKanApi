@@ -40,21 +40,31 @@ public struct ZhuiShuKanApi {
         return try parseSearch(data)
     }
 
-    public static func getContent(_ search: SearchResult) async throws -> [Content] {
-        let menus = try await getMenu(search.url)
+    public static func getContent(_ search: SearchResult, progress: ((Double) -> ())? = nil) async throws -> [Content] {
+        let menus = try await getMenu(search.url) {
+            progress?($0 * 0.1)
+        }
 
         var contents = [Content]()
 
-        for menu in menus {
+        for (id, menu) in menus.enumerated() {
             contents.append(try await parseContent(menu))
+            progress?(Double(id + 1) / Double(menus.count) * 0.9)
         }
 
         return contents
     }
 
+    public static func genEpub(at filePath: URL, with searchResult: SearchResult, progress: ((Double) -> ())? = nil) async throws {
+        let contents = try await getContent(searchResult) {
+            progress?($0 * 0.5)
+        }
+        try await EpubGen(contents: contents, searchResult: searchResult).gen(filePath, progress: progress)
+    }
+
     // MARK: - Auxiliary
 
-    static func getMenu(_ url: URL) async throws -> [Menu] {
+    static func getMenu(_ url: URL, progress: ((Double) -> ())? = nil) async throws -> [Menu] {
         let (data, response) = try await URLSession.shared.data(from: url)
 
         guard (response as? HTTPURLResponse)?.statusCode == 200 else {
@@ -69,7 +79,7 @@ public struct ZhuiShuKanApi {
             throw NSError()
         }
 
-        return try await parseMenu(menuData)
+        return try await parseMenu(menuData, progress: progress)
     }
 
     // MARK: - Soup
@@ -105,7 +115,7 @@ public struct ZhuiShuKanApi {
         return url
     }
 
-    static func parseMenu(_ data: Data) async throws -> [Menu] {
+    static func parseMenu(_ data: Data, progress: ((Double) -> ())? = nil) async throws -> [Menu] {
         let doc = try createDoc(data)
 
         guard let body = doc.body() else { throw NSError() }
@@ -118,7 +128,7 @@ public struct ZhuiShuKanApi {
 
         var res = [Menu]()
 
-        for url in urls {
+        for (id, url) in urls.enumerated() {
             var request = URLRequest(url: url)
             request.httpMethod = "GET"
 
@@ -144,6 +154,8 @@ public struct ZhuiShuKanApi {
             }
 
             res.append(contentsOf: menus)
+
+            progress?(Double(id + 1) / Double(urls.count))
         }
 
         return res
