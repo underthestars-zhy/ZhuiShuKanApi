@@ -3,30 +3,33 @@ import SwiftSoup
 
 public struct ZhuiShuKanApi {
     public static func search(name: String) async throws -> [SearchResult] {
-        guard let URL = URL(string: "https://m.zhuishukan.com/search.html") else { return [] }
+        guard let URL = URL(string: "https://m.ijjxsw.co/search/") else { return [] }
         var request = URLRequest(url: URL)
         request.httpMethod = "POST"
 
         // Headers
 
-        request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0) Gecko/20100101 Firefox/102.0", forHTTPHeaderField: "User-Agent")
+        request.addValue("m.ijjxsw.co", forHTTPHeaderField: "Host")
+        request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:103.0) Gecko/20100101 Firefox/103.0", forHTTPHeaderField: "User-Agent")
         request.addValue("text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8", forHTTPHeaderField: "Accept")
         request.addValue("zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2", forHTTPHeaderField: "Accept-Language")
         request.addValue("gzip, deflate, br", forHTTPHeaderField: "Accept-Encoding")
         request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        request.addValue("https://m.zhuishukan.com", forHTTPHeaderField: "Origin")
-        request.addValue("https://m.zhuishukan.com/search.html", forHTTPHeaderField: "Referer")
+        request.addValue("https://m.ijjxsw.co", forHTTPHeaderField: "Origin")
+        request.addValue("1", forHTTPHeaderField: "DNT")
+        request.addValue("https://m.ijjxsw.co/", forHTTPHeaderField: "Referer")
         request.addValue("1", forHTTPHeaderField: "Upgrade-Insecure-Requests")
         request.addValue("document", forHTTPHeaderField: "Sec-Fetch-Dest")
         request.addValue("navigate", forHTTPHeaderField: "Sec-Fetch-Mode")
         request.addValue("same-origin", forHTTPHeaderField: "Sec-Fetch-Site")
         request.addValue("?1", forHTTPHeaderField: "Sec-Fetch-User")
-        request.addValue("waf_sc=5889647726; sex=boy; Hm_lvt_6a37d008dfb94eb8089427a50eaa8831=1660988392; Hm_lpvt_6a37d008dfb94eb8089427a50eaa8831=1660988461", forHTTPHeaderField: "Cookie")
 
         // Form URL-Encoded Body
 
         let bodyParameters = [
+            "show": "writer,title",
             "searchkey": name,
+            "Submit22": "搜索",
         ]
         let bodyString = bodyParameters.queryParameters
         request.httpBody = bodyString.data(using: .utf8, allowLossyConversion: true)
@@ -97,10 +100,13 @@ public struct ZhuiShuKanApi {
         let ul = try body.select("li")
 
         return try ul.array().compactMap { li in
-            guard let name = try li.select("a").first()?.attr("title") else { return nil }
-            guard let link = try li.select("a").first()?.attr("href"), let url = URL(string: "https://m.zhuishukan.com" + link) else { return nil }
-            guard let image = try li.select("a").first()?.select("img").first()?.attr("src"), let imageURL = URL(string: image)  else { return nil }
-            let author = try li.select("a").array()[2].text()
+            guard let name = try li.select("strong").first()?.text() else { return nil }
+            guard let link = try li.select("a").first()?.attr("href"), let url = URL(string: "https://m.ijjxsw.co" + link) else { return nil }
+            guard let image = try li.select("img").first()?.attr("src"), let imageURL = URL(string: image) else { return nil }
+            guard var author = try li.select("span").first()?.text() else { return nil }
+            author.removeFirst()
+            author.removeFirst()
+            author.removeFirst()
 
             return SearchResult(name: name, author: author, preview: imageURL, url: url)
         }
@@ -111,11 +117,11 @@ public struct ZhuiShuKanApi {
 
         guard let body = doc.body() else { throw NSError() }
 
-        let li = try body.getElementsByClass("now")
+        let li = try body.getElementsByClass("read")
 
         guard let link = try li.select("a").first()?.attr("href") else { throw NSError() }
 
-        guard let url = URL(string: "https://m.zhuishukan.com" + link) else { throw NSError() }
+        guard let url = URL(string: "https://m.ijjxsw.co" + link) else { throw NSError() }
 
         return url
     }
@@ -125,10 +131,10 @@ public struct ZhuiShuKanApi {
 
         guard let body = doc.body() else { throw NSError() }
 
-        let pagelist = try body.getElementsByClass("pagelist")
+        let pagelist = try body.getElementsByClass("text")
 
         let urls = try pagelist.select("option").array().compactMap { option in
-            URL(string: "https://m.zhuishukan.com" + (try option.attr("value")))
+            URL(string: "https://m.ijjxsw.co" + (try option.attr("value")))
         }
 
         var res = [Menu]()
@@ -149,11 +155,11 @@ public struct ZhuiShuKanApi {
 
             guard let _body = _doc.body() else { throw NSError() }
 
-            let ul = try _body.getElementsByClass("read")
+            guard let div = try _body.getElementsByClass("sso_a").first() else { throw NSError() }
 
-            let menus: [Menu] = try ul.select("li").compactMap { li in
+            let menus: [Menu] = try div.select("li").compactMap { li in
                 guard let name = try li.select("a").first()?.text() else { return nil }
-                guard let link = try li.select("a").first()?.attr("href"), let url = URL(string: "https://m.zhuishukan.com" + link) else { return nil }
+                guard let link = try li.select("a").first()?.attr("href"), let url = URL(string: "https://m.ijjxsw.co" + link) else { return nil }
 
                 return Menu(title: name, url: url)
             }
@@ -183,27 +189,18 @@ public struct ZhuiShuKanApi {
 
             guard let body = doc.body() else { throw NSError() }
 
-            let div = try body.getElementsByClass("azhuishukan_t62ff29a")
+            guard let span = try body.getElementById("Content") else { throw NSError() }
 
-            var subDivs = try div.select("div").array().filter {
-                try $0.className().isEmpty
-            }
-
-            subDivs.removeFirst()
-            let last = try subDivs.removeLast().text()
-
-            let endContent = content + (try subDivs.map {
+            let endContent = content + (try span.select("p").map {
                 try $0.text()
             })
 
-            let page = try body.getElementsByClass("pager z1")
+            guard let next = try body.getElementById("next_url") else { throw NSError() }
 
-            let a3 = try page.select("a").array()[2]
-
-            if try a3.text() == "下一页", let _url = URL(string: "https://m.zhuishukan.com" + (try a3.attr("href"))) {
+            if try next.text() == "下一页", let _url = URL(string: "https://m.ijjxsw.co" + (try next.attr("href"))) {
                 return try await innerParse(_url, content: endContent)
             } else {
-                return endContent + [last]
+                return endContent
             }
         }
 
