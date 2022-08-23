@@ -3,7 +3,7 @@ import XCTest
 
 final class ZhuiShuKanApiTests: XCTestCase {
     func testSearch() async throws {
-        print(try await ZhuiShuKanApi.search(name: "诡秘之主"))
+        print(try await ZhuiShuKanApi.search(name: "我的姐姐是大明星"))
     }
 
     func testGetMenu() async throws {
@@ -16,7 +16,7 @@ final class ZhuiShuKanApiTests: XCTestCase {
     }
 
     func testGenEpub() async throws {
-        let search = SearchResult(name: "原来我是妖二代", author: "卖报小郎君", preview: URL(string: "https://img.zhuishukan.com/files/article/image/224/224729/224729s.jpg")!, url: URL(string: "https://m.zhuishukan.com/book/776/id_776304.html")!, introduction: "")
+        let search = SearchResult(name: "无声的证词（法医秦明系列2）", author: "法医秦明", preview: URL(string: "https://img.ijjxsw.co/16/16257/16257s.jpg")!, url: URL(string: "https://m.ijjxsw.co/txt/16257.html")!)
 
         let contents = [Content(title: "1", _content: ["1", "2"], fileURL: nil), Content(title: "2", _content: ["1", "2"], fileURL: nil)]
 
@@ -26,10 +26,18 @@ final class ZhuiShuKanApiTests: XCTestCase {
     }
 
     func testFinal() async throws {
-        let search = SearchResult(name: "原来我是妖二代", author: "卖报小郎君", preview: URL(string: "https://img.ijjxsw.co/1/1909/1909s.jpg")!, url: URL(string: "https://m.ijjxsw.co/txt/1909.html")!, introduction: "")
+        let search = SearchResult(name: "无声的证词（法医秦明系列2）", author: "法医秦明", preview: URL(string: "https://img.ijjxsw.co/16/16257/16257s.jpg")!, url: URL(string: "https://m.ijjxsw.co/txt/16257.html")!)
 
         try await ZhuiShuKanApi.genEpub(at: URL(filePath: "/Users/zhuhaoyu/Downloads/test"), with: search) {
             print($0)
         }
+    }
+
+    func testZlibAvailableURL() async throws {
+        print(try await Zlibrary.availableURL ?? "no url")
+    }
+
+    func testGetIntro() async throws {
+        print(try await ZhuiShuKanApi.getIntro(from: SearchResult(name: "无声的证词（法医秦明系列2）", author: "法医秦明", preview: URL(string: "https://img.ijjxsw.co/16/16257/16257s.jpg")!, url: URL(string: "https://m.ijjxsw.co/txt/16257.html")!)))
     }
 }

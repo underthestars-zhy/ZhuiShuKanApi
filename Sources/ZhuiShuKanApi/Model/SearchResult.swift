@@ -12,5 +12,4 @@ public struct SearchResult {
     public let author: String
     public let preview: URL
     public let url: URL
-    public let introduction: String
 }

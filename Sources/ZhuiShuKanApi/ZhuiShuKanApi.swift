@@ -70,6 +70,31 @@ public struct ZhuiShuKanApi {
         progress?(1)
     }
 
+    public static func getIntro(from search: SearchResult) async throws -> String {
+        var request = URLRequest(url: search.url)
+        request.httpMethod = "GET"
+
+        request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0) Gecko/20100101 Firefox/102.0", forHTTPHeaderField: "User-Agent")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw NSError()
+        }
+
+        let doc = try createDoc(data)
+
+        guard let body = doc.body() else { throw NSError() }
+
+        var text = try body.getElementById("content")?.select("p").array().reduce("", { partialResult, p in
+            partialResult + (try p.text()) + "\n"
+        })
+
+        text?.removeLast()
+
+        return text ?? ""
+    }
+
     // MARK: - Auxiliary
 
     static func getMenu(_ url: URL, progress: ((Double) -> ())? = nil) async throws -> [Menu] {
@@ -104,12 +129,11 @@ public struct ZhuiShuKanApi {
             guard let link = try li.select("a").first()?.attr("href"), let url = URL(string: "https://m.ijjxsw.co" + link) else { return nil }
             guard let image = try li.select("img").first()?.attr("src"), let imageURL = URL(string: image) else { return nil }
             guard var author = try li.select("span").first()?.text() else { return nil }
-            guard let intro = try li.getElementsByClass("intro").first()?.text() else { return nil }
             author.removeFirst()
             author.removeFirst()
             author.removeFirst()
 
-            return SearchResult(name: name, author: author, preview: imageURL, url: url, introduction: intro)
+            return SearchResult(name: name, author: author, preview: imageURL, url: url)
         }
     }
 
