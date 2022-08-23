@@ -16,7 +16,7 @@ final class ZhuiShuKanApiTests: XCTestCase {
     }
 
     func testGenEpub() async throws {
-        let search = SearchResult(name: "原来我是妖二代", author: "卖报小郎君", preview: URL(string: "https://img.zhuishukan.com/files/article/image/224/224729/224729s.jpg")!, url: URL(string: "https://m.zhuishukan.com/book/776/id_776304.html")!)
+        let search = SearchResult(name: "原来我是妖二代", author: "卖报小郎君", preview: URL(string: "https://img.zhuishukan.com/files/article/image/224/224729/224729s.jpg")!, url: URL(string: "https://m.zhuishukan.com/book/776/id_776304.html")!, introduction: "")
 
         let contents = [Content(title: "1", _content: ["1", "2"], fileURL: nil), Content(title: "2", _content: ["1", "2"], fileURL: nil)]
 
@@ -26,7 +26,7 @@ final class ZhuiShuKanApiTests: XCTestCase {
     }
 
     func testFinal() async throws {
-        let search = SearchResult(name: "原来我是妖二代", author: "卖报小郎君", preview: URL(string: "https://img.ijjxsw.co/1/1909/1909s.jpg")!, url: URL(string: "https://m.ijjxsw.co/txt/1909.html")!)
+        let search = SearchResult(name: "原来我是妖二代", author: "卖报小郎君", preview: URL(string: "https://img.ijjxsw.co/1/1909/1909s.jpg")!, url: URL(string: "https://m.ijjxsw.co/txt/1909.html")!, introduction: "")
 
         try await ZhuiShuKanApi.genEpub(at: URL(filePath: "/Users/zhuhaoyu/Downloads/test"), with: search) {
             print($0)

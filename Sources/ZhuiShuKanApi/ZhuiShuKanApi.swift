@@ -104,11 +104,12 @@ public struct ZhuiShuKanApi {
             guard let link = try li.select("a").first()?.attr("href"), let url = URL(string: "https://m.ijjxsw.co" + link) else { return nil }
             guard let image = try li.select("img").first()?.attr("src"), let imageURL = URL(string: image) else { return nil }
             guard var author = try li.select("span").first()?.text() else { return nil }
+            guard let intro = try li.getElementsByClass("intro").first()?.text() else { return nil }
             author.removeFirst()
             author.removeFirst()
             author.removeFirst()
 
-            return SearchResult(name: name, author: author, preview: imageURL, url: url)
+            return SearchResult(name: name, author: author, preview: imageURL, url: url, introduction: intro)
         }
     }
 
