@@ -133,7 +133,7 @@ public struct ZhuiShuKanApi {
             author.removeFirst()
             author.removeFirst()
 
-            return SearchResult(name: name, author: author, preview: imageURL, url: url)
+            return SearchResult(name: name, author: author, preview: imageURL, url: url, type: .ijjxsw)
         }
     }
 
