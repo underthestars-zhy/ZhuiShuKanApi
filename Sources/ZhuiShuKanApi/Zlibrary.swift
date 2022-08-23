@@ -73,6 +73,35 @@ public struct Zlibrary {
         return try body.getElementById("bookDescriptionBox")?.text() ?? ""
     }
 
+    public static func getDonwloadLink(from search: SearchResult) async throws -> URL {
+        var request = URLRequest(url: search.url)
+        request.httpMethod = "GET"
+
+        request.addValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0) Gecko/20100101 Firefox/102.0", forHTTPHeaderField: "User-Agent")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw NSError()
+        }
+
+        let doc = try createDoc(data)
+
+        guard let body = doc.body() else { throw NSError() }
+
+        guard let donwloadString = try body.getElementsByClass("zlibicon-download").first()?.parents().attr("href"), let redictUrl = getPureURL(for: search.url)?.appending(path: donwloadString) else { throw NSError() }
+
+        return redictUrl
+    }
+
+    // MARK: - URL
+
+    static func getPureURL(for url: URL) -> URL? {
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        components?.path = ""
+        return components?.url
+    }
+
     // MARK: - Soup
 
     static func createDoc(_ data: Data) throws -> Document {
