@@ -44,4 +44,8 @@ final class ZhuiShuKanApiTests: XCTestCase {
     func testSearchZlibrary() async throws {
         print(try await Zlibrary.search(name: "设计中的设计"))
     }
+
+    func testGetZlibIntro() async throws {
+        print(try await Zlibrary.getIntro(from: SearchResult(name: "设计中的设计）", author: "[日] 原研哉", preview: URL(string: "https://covers.zlibcdn2.com/covers200/books/70/a7/49/70a749c5ebdb3c9f1917fcf612c74469.jpg")!, url: URL(string: "https://b-ok.global/book/5294616/1e7bf9")!, type: .zlibrary)))
+    }
 }
