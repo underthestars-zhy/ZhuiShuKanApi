@@ -217,7 +217,9 @@ public struct ZhuiShuKanApi {
             guard let span = try body.getElementById("Content") else { throw NSError() }
 
             let endContent = content + (try span.select("p").map {
-                return try $0.text().replacing("<content>", with: "").replacing("</content>", with: "")
+                let regex1 = #/<.+>/#
+                let regex2 = #/<\\.+>/#
+                return try $0.text().replacing(regex1, with: "").replacing(regex2, with: "")
             }.filter {
                 $0 != "最快更新" && $0 != ""
             })
