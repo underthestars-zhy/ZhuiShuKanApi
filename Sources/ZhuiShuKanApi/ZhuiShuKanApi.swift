@@ -221,7 +221,7 @@ public struct ZhuiShuKanApi {
                 let regex2 = #/<\\.+>/#
                 return try $0.text().replacing(regex1, with: "").replacing(regex2, with: "")
             }.filter {
-                $0 != "最快更新" && $0 != ""
+                $0 != "最快更新" && $0 != "" && !($0.contains("&ap")) && !($0.contains("/txt")) && !($0.contains("手机版阅读网址"))
             })
 
             guard let next = try body.getElementById("next_url") else { throw NSError() }
