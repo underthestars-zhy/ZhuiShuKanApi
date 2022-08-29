@@ -219,9 +219,10 @@ public struct ZhuiShuKanApi {
             let endContent = content + (try span.select("p").map {
                 let regex1 = #/<.+>/#
                 let regex2 = #/<\\.+>/#
-                return try $0.text().replacing(regex1, with: "").replacing(regex2, with: "")
+                let regex3 = #/&039;/#
+                return try $0.text().replacing(regex1, with: "").replacing(regex2, with: "").replacing(regex3, with: "'")
             }.filter {
-                $0 != "最快更新" && $0 != "" && !($0.contains("&ap")) && !($0.contains("/txt")) && !($0.contains("手机版阅读网址"))
+                $0 != "最快更新" && $0 != "" && !($0.contains("&ap")) && !($0.contains("/txt")) && !($0.contains("手机版阅读网址")) && !($0.contains("佰度搜索")) && $0 != "。"
             })
 
             guard let next = try body.getElementById("next_url") else { throw NSError() }
